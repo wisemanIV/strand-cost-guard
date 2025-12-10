@@ -3,7 +3,7 @@
 import pytest
 from datetime import datetime, timedelta
 
-from strand_cost_guard.policies.budget import (
+from strands_costguard.policies.budget import (
     BudgetSpec,
     BudgetScope,
     BudgetPeriod,
@@ -12,11 +12,11 @@ from strand_cost_guard.policies.budget import (
     ThresholdAction,
     HardLimitAction,
 )
-from strand_cost_guard.core.budget_tracker import (
+from strands_costguard.core.budget_tracker import (
     BudgetTracker,
     get_period_boundaries,
 )
-from strand_cost_guard.core.entities import RunContext, RunState
+from strands_costguard.core.entities import RunContext, RunState
 
 
 class TestBudgetMatch:

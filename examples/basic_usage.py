@@ -7,7 +7,7 @@ agent runtime with budget enforcement and cost tracking.
 
 from strands.telemetry.config import StrandsTelemetry
 
-from strand_cost_guard import (
+from strands_costguard import (
     CostGuard,
     CostGuardConfig,
     FilePolicySource,

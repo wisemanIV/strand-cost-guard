@@ -1,4 +1,4 @@
-# Strand Cost Guard
+# Strands CostGuard
 
 A Strands-native cost management library for multi-agent systems with budget enforcement, adaptive model routing, and OpenTelemetry-compatible metrics.
 
@@ -9,20 +9,26 @@ A Strands-native cost management library for multi-agent systems with budget enf
 - **Cost Tracking**: Track and attribute costs by tenant, strand, workflow, run, model, and tool
 - **OpenTelemetry Metrics**: Emit cost metrics compatible with OTel collectors for long-term storage and analysis
 - **Flexible Policies**: Configure via YAML files or environment variables
+- **Persistent Budget State**: Optional Valkey/Redis persistence for budget state across restarts
 
 ## Installation
 
 ```bash
-pip install strand-cost-guard
+pip install strands-costguard
+```
+
+For persistence support:
+
+```bash
+pip install strands-costguard[valkey]
 ```
 
 ## Quick Start
 
 ```python
-from strand_cost_guard import (
+from strands_costguard import (
     CostGuard,
     CostGuardConfig,
-    OtelConfig,
     FilePolicySource,
     ModelUsage,
 )
@@ -30,11 +36,9 @@ from strand_cost_guard import (
 # Initialize Cost Guard
 config = CostGuardConfig(
     policy_source=FilePolicySource(path="./policies"),
-    otel_config=OtelConfig(
-        enabled=True,
-        endpoint="http://localhost:4317",
-        service_name="my-strands-service",
-    ),
+    enable_budget_enforcement=True,
+    enable_routing=True,
+    enable_metrics=True,
 )
 
 guard = CostGuard(config=config)

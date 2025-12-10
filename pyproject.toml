@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "strand-cost-guard"
+name = "strands-costguard"
 version = "0.1.0"
 description = "Cost Guard component for Strands-based multi-agent systems with budget enforcement, adaptive routing, and OpenTelemetry metrics"
 readme = "README.md"
@@ -40,6 +40,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+valkey = [
+    "valkey>=6.0.0",
+]
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
@@ -47,15 +50,17 @@ dev = [
     "mypy>=1.0.0",
     "ruff>=0.1.0",
     "black>=23.0.0",
+    "valkey>=6.0.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/strands/strand-cost-guard"
-Documentation = "https://github.com/strands/strand-cost-guard#readme"
-Repository = "https://github.com/strands/strand-cost-guard"
+Homepage = "https://github.com/strands/strands-costguard"
+Documentation = "https://github.com/strands/strands-costguard#readme"
+Repository = "https://github.com/strands/strands-costguard"
+Changelog = "https://github.com/strands/strands-costguard/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/strand_cost_guard"]
+packages = ["src/strands_costguard"]
 
 [tool.ruff]
 line-length = 100

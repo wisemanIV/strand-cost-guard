@@ -2,7 +2,7 @@
 
 import pytest
 
-from strand_cost_guard.pricing.table import (
+from strands_costguard.pricing.table import (
     PricingTable,
     ModelPricing,
     ToolPricing,

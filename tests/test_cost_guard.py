@@ -3,10 +3,10 @@
 import pytest
 from unittest.mock import MagicMock
 
-from strand_cost_guard.core.cost_guard import CostGuard
-from strand_cost_guard.core.config import CostGuardConfig, OtelConfig
-from strand_cost_guard.core.usage import ModelUsage, ToolUsage, IterationUsage
-from strand_cost_guard.policies.budget import BudgetSpec, BudgetScope, BudgetMatch, ThresholdAction
+from strands_costguard.core.cost_guard import CostGuard
+from strands_costguard.core.config import CostGuardConfig, OtelConfig
+from strands_costguard.core.usage import ModelUsage, ToolUsage, IterationUsage
+from strands_costguard.policies.budget import BudgetSpec, BudgetScope, BudgetMatch, ThresholdAction
 
 
 class MockPolicySource:

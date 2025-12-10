@@ -2,13 +2,13 @@
 
 import pytest
 
-from strand_cost_guard.policies.routing import (
+from strands_costguard.policies.routing import (
     RoutingPolicy,
     StageConfig,
     DowngradeTrigger,
     ModelStage,
 )
-from strand_cost_guard.routing.router import ModelRouter, RouterConfig, ModelCallContext
+from strands_costguard.routing.router import ModelRouter, RouterConfig, ModelCallContext
 
 
 class TestDowngradeTrigger:
