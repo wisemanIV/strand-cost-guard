@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from strands_costguard.core.cost_guard import CostGuard
-from strands_costguard.core.config import CostGuardConfig, OtelConfig
+from strands_costguard.core.config import CostGuardConfig
 from strands_costguard.core.usage import ModelUsage, ToolUsage, IterationUsage
 from strands_costguard.policies.budget import BudgetSpec, BudgetScope, BudgetMatch, ThresholdAction
 
@@ -39,7 +39,7 @@ class TestCostGuardLifecycle:
         """Run should be admitted when no budgets are configured."""
         config = CostGuardConfig(
             policy_source=MockPolicySource(),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -64,7 +64,7 @@ class TestCostGuardLifecycle:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(budgets=budgets),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -93,7 +93,7 @@ class TestCostGuardLifecycle:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(budgets=budgets),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -122,7 +122,7 @@ class TestCostGuardLifecycle:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(budgets=budgets),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -144,7 +144,7 @@ class TestCostGuardLifecycle:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(budgets=budgets),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -164,7 +164,7 @@ class TestCostGuardLifecycle:
         """Model call should be allowed under normal conditions."""
         config = CostGuardConfig(
             policy_source=MockPolicySource(),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -184,7 +184,7 @@ class TestCostGuardLifecycle:
         """Model call should record cost correctly."""
         config = CostGuardConfig(
             policy_source=MockPolicySource(),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -204,7 +204,7 @@ class TestCostGuardLifecycle:
         """Tool call should be allowed under normal conditions."""
         config = CostGuardConfig(
             policy_source=MockPolicySource(),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -226,7 +226,7 @@ class TestCostGuardLifecycle:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(budgets=budgets),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -256,7 +256,7 @@ class TestCostGuardLifecycle:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(budgets=budgets),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
         )
         guard = CostGuard(config=config)
 
@@ -301,7 +301,7 @@ class TestCostGuardRouting:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(routing_policies=routing),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
             enable_routing=True,
         )
         guard = CostGuard(config=config)
@@ -345,21 +345,23 @@ class TestCostGuardRouting:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(budgets=budgets, routing_policies=routing),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
             enable_routing=True,
         )
         guard = CostGuard(config=config)
 
+        # First run: add cost to exceed 70% threshold
         guard.on_run_start("t1", "s1", "w1", "run-1")
-
-        # Add cost to exceed 70% threshold
         guard.after_model_call(
             "run-1",
             ModelUsage.from_response("gpt-4o", 1000, 500, cost=8.0),
         )
+        # End the run to commit costs to budget state
+        guard.on_run_end("run-1", "completed")
 
-        # Next synthesis call should be downgraded
-        decision = guard.before_model_call("run-1", "gpt-4o", "synthesis", 500)
+        # Second run: should be downgraded since budget utilization is 80%
+        guard.on_run_start("t1", "s1", "w1", "run-2")
+        decision = guard.before_model_call("run-2", "gpt-4o", "synthesis", 500)
         assert decision.was_downgraded is True
         assert decision.effective_model == "gpt-4o-mini"
 
@@ -380,7 +382,7 @@ class TestCostGuardDisabled:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(budgets=budgets),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
             enable_budget_enforcement=False,  # Disabled
         )
         guard = CostGuard(config=config)
@@ -409,7 +411,7 @@ class TestCostGuardDisabled:
         ]
         config = CostGuardConfig(
             policy_source=MockPolicySource(routing_policies=routing),
-            otel_config=OtelConfig(enabled=False),
+            enable_metrics=False,
             enable_routing=False,  # Disabled
         )
         guard = CostGuard(config=config)

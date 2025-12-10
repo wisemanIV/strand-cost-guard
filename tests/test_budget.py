@@ -278,6 +278,8 @@ class TestBudgetTracker:
             max_cost=100.0,
         )
 
+        # First create the budget state so register_run can add to it
+        tracker.get_or_create_budget_state(budget, "t1", "s1", "w1")
         tracker.register_run(run_state, [budget])
 
         # Add some cost
@@ -305,6 +307,9 @@ class TestBudgetTracker:
             match=BudgetMatch(tenant_id="t1"),
             max_concurrent_runs=10,
         )
+
+        # First create the budget state so register_run can add to it
+        tracker.get_or_create_budget_state(budget, "t1", "s1", "w1")
 
         # Start 3 runs
         for i in range(3):

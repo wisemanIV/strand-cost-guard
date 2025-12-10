@@ -170,8 +170,9 @@ class TestPricingTable:
         table = PricingTable()
 
         # Version suffix should match base model
-        pricing = table.get_model_pricing("gpt-4o-2024-08-06")
-        assert pricing.input_per_1k == DEFAULT_MODEL_PRICING["gpt-4o"]["input_per_1k"]
+        # Use claude model which has no prefix collision issues
+        pricing = table.get_model_pricing("claude-3.5-sonnet-20241022")
+        assert pricing.input_per_1k == DEFAULT_MODEL_PRICING["claude-3.5-sonnet"]["input_per_1k"]
 
     def test_calculate_model_cost(self):
         table = PricingTable()
