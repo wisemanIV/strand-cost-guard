@@ -180,6 +180,44 @@ Cost Guard integrates with your agent runtime via lifecycle hooks:
 
 ## OpenTelemetry Metrics
 
+### Enabling OTLP Export
+
+To export metrics to an OpenTelemetry collector, configure StrandsTelemetry before initializing CostGuard:
+
+```python
+from strands.telemetry.config import StrandsTelemetry
+from strands_costguard import CostGuard, CostGuardConfig, FilePolicySource
+
+# Configure telemetry with OTLP export
+telemetry = StrandsTelemetry()
+telemetry.setup_otlp_exporter(endpoint="http://localhost:4317")
+telemetry.setup_meter(enable_otlp_exporter=True)
+
+# Initialize CostGuard (will use the global MeterProvider)
+config = CostGuardConfig(
+    policy_source=FilePolicySource(path="./policies"),
+    enable_metrics=True,
+)
+guard = CostGuard(config=config)
+```
+
+**Requirements:**
+- An OpenTelemetry collector running at the specified endpoint (default: `localhost:4317`)
+- For local development, you can run a collector with Docker:
+  ```bash
+  docker run -p 4317:4317 otel/opentelemetry-collector:latest
+  ```
+
+**Disabling OTLP Export:**
+
+If you don't have a collector running, disable OTLP export to avoid connection errors:
+
+```python
+telemetry.setup_meter(enable_otlp_exporter=False)
+```
+
+### Metrics Reference
+
 Cost Guard emits the following metrics:
 
 | Metric | Type | Description |

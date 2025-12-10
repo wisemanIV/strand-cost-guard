@@ -22,12 +22,17 @@ def main():
     # Configure StrandsTelemetry first (handles all OTEL setup)
     telemetry = StrandsTelemetry()
     telemetry.setup_otlp_exporter(endpoint="http://localhost:4317")
-    telemetry.setup_meter(enable_otlp_exporter=True)
+    telemetry.setup_meter(enable_otlp_exporter=False)
 
     # Initialize Cost Guard with file-based policies
     # Cost Guard will use the global MeterProvider from StrandsTelemetry
+    # Use path relative to this script's location
+    import os
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    policies_path = os.path.join(script_dir, "policies")
+
     config = CostGuardConfig(
-        policy_source=FilePolicySource(path="./policies"),
+        policy_source=FilePolicySource(path=policies_path),
         enable_budget_enforcement=True,
         enable_routing=True,
         enable_metrics=True,
