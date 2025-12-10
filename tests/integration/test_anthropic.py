@@ -76,7 +76,7 @@ class MockPolicySource:
 class TestIntegrationWithAnthropicAPI:
     """Integration tests using the Anthropic API."""
 
-    def test_simple_agent_with_cost_tracking(self):
+    def test_simple_agent_with_cost_tracking(self) -> None:
         """Test that CostGuard tracks costs for a simple agent interaction."""
         # Setup CostGuard
         budgets = [
@@ -156,7 +156,7 @@ class TestIntegrationWithAnthropicAPI:
 
         guard.shutdown()
 
-    def test_budget_enforcement_blocks_expensive_runs(self):
+    def test_budget_enforcement_blocks_expensive_runs(self) -> None:
         """Test that budget enforcement rejects runs when budget is exceeded."""
         # Setup CostGuard with a very low budget
         budgets = [
@@ -223,7 +223,7 @@ class TestIntegrationWithAnthropicAPI:
 
         guard.shutdown()
 
-    def test_iteration_and_tool_call_limits(self):
+    def test_iteration_and_tool_call_limits(self) -> None:
         """Test that iteration and tool call limits are enforced."""
         budgets = [
             {
@@ -283,7 +283,7 @@ class TestIntegrationWithAnthropicAPI:
         guard.on_run_end(run_id=run_id, status="completed")
         guard.shutdown()
 
-    def test_model_routing_with_real_api(self):
+    def test_model_routing_with_real_api(self) -> None:
         """Test that model routing works with real API calls."""
         routing = [
             {
@@ -363,7 +363,7 @@ class TestIntegrationWithAnthropicAPI:
 class TestIntegrationMultipleRuns:
     """Integration tests for multiple runs and budget accumulation."""
 
-    def test_cost_accumulates_across_runs(self):
+    def test_cost_accumulates_across_runs(self) -> None:
         """Test that costs accumulate correctly across multiple runs."""
         budgets = [
             {

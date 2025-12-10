@@ -1,5 +1,7 @@
 """Tests for policy storage and retrieval."""
 
+from typing import Any
+
 from strands_costguard.policies.budget import BudgetScope
 from strands_costguard.policies.store import (
     EnvPolicySource,
@@ -13,35 +15,35 @@ class MockPolicySource:
 
     def __init__(
         self,
-        budgets: list[dict] = None,
-        routing_policies: list[dict] = None,
-        pricing: dict = None,
+        budgets: list[dict[str, Any]] | None = None,
+        routing_policies: list[dict[str, Any]] | None = None,
+        pricing: dict[str, Any] | None = None,
     ):
         self._budgets = budgets or []
         self._routing = routing_policies or []
         self._pricing = pricing or {}
 
-    def load_budgets(self) -> list[dict]:
+    def load_budgets(self) -> list[dict[str, Any]]:
         return self._budgets
 
-    def load_routing_policies(self) -> list[dict]:
+    def load_routing_policies(self) -> list[dict[str, Any]]:
         return self._routing
 
-    def load_pricing(self) -> dict:
+    def load_pricing(self) -> dict[str, Any]:
         return self._pricing
 
 
 class TestFilePolicySource:
     """Tests for FilePolicySource."""
 
-    def test_load_yaml_file_not_found(self, tmp_path):
+    def test_load_yaml_file_not_found(self, tmp_path) -> None:
         """Should return empty dict when file not found."""
         source = FilePolicySource(path=str(tmp_path))
         assert source.load_budgets() == []
         assert source.load_routing_policies() == []
         assert source.load_pricing() == {}
 
-    def test_load_budgets_from_yaml(self, tmp_path):
+    def test_load_budgets_from_yaml(self, tmp_path) -> None:
         """Should load budgets from YAML file."""
         budgets_content = """
 budgets:
@@ -59,7 +61,7 @@ budgets:
         assert budgets[0]["id"] == "test-budget"
         assert budgets[0]["max_cost"] == 100.0
 
-    def test_load_routing_from_yaml(self, tmp_path):
+    def test_load_routing_from_yaml(self, tmp_path) -> None:
         """Should load routing policies from YAML file."""
         routing_content = """
 routing_policies:
@@ -76,7 +78,7 @@ routing_policies:
         assert routing[0]["id"] == "test-routing"
         assert routing[0]["default_model"] == "gpt-4o-mini"
 
-    def test_load_pricing_from_yaml(self, tmp_path):
+    def test_load_pricing_from_yaml(self, tmp_path) -> None:
         """Should load pricing from YAML file."""
         pricing_content = """
 pricing:
@@ -92,7 +94,7 @@ pricing:
         assert "models" in pricing
         assert "custom-model" in pricing["models"]
 
-    def test_load_empty_yaml(self, tmp_path):
+    def test_load_empty_yaml(self, tmp_path) -> None:
         """Should handle empty YAML files."""
         (tmp_path / "budgets.yaml").write_text("")
         source = FilePolicySource(path=str(tmp_path))
@@ -100,7 +102,7 @@ pricing:
         budgets = source.load_budgets()
         assert budgets == []
 
-    def test_custom_filenames(self, tmp_path):
+    def test_custom_filenames(self, tmp_path) -> None:
         """Should use custom filenames."""
         custom_budgets = """
 budgets:
@@ -123,7 +125,7 @@ budgets:
 class TestEnvPolicySource:
     """Tests for EnvPolicySource."""
 
-    def test_load_budgets_from_env(self, monkeypatch):
+    def test_load_budgets_from_env(self, monkeypatch) -> None:
         """Should load budget from environment variables."""
         monkeypatch.setenv("COST_GUARD_MAX_COST", "500.0")
         monkeypatch.setenv("COST_GUARD_PERIOD", "weekly")
@@ -136,7 +138,7 @@ class TestEnvPolicySource:
         assert budgets[0]["max_cost"] == 500.0
         assert budgets[0]["period"] == "weekly"
 
-    def test_load_budgets_no_env(self, monkeypatch):
+    def test_load_budgets_no_env(self, monkeypatch) -> None:
         """Should return empty list when no env vars set."""
         # Clear the env var if it exists
         monkeypatch.delenv("COST_GUARD_MAX_COST", raising=False)
@@ -146,7 +148,7 @@ class TestEnvPolicySource:
 
         assert budgets == []
 
-    def test_load_routing_from_env(self, monkeypatch):
+    def test_load_routing_from_env(self, monkeypatch) -> None:
         """Should load routing from environment variables."""
         monkeypatch.setenv("COST_GUARD_DEFAULT_MODEL", "gpt-4o")
         monkeypatch.setenv("COST_GUARD_FALLBACK_MODEL", "gpt-4o-mini")
@@ -158,7 +160,7 @@ class TestEnvPolicySource:
         assert routing[0]["default_model"] == "gpt-4o"
         assert routing[0]["default_fallback_model"] == "gpt-4o-mini"
 
-    def test_load_routing_no_env(self, monkeypatch):
+    def test_load_routing_no_env(self, monkeypatch) -> None:
         """Should return empty list when no env vars set."""
         monkeypatch.delenv("COST_GUARD_DEFAULT_MODEL", raising=False)
 
@@ -167,12 +169,12 @@ class TestEnvPolicySource:
 
         assert routing == []
 
-    def test_load_pricing_returns_empty(self):
+    def test_load_pricing_returns_empty(self) -> None:
         """Pricing via env vars not supported."""
         source = EnvPolicySource()
         assert source.load_pricing() == {}
 
-    def test_custom_prefix(self, monkeypatch):
+    def test_custom_prefix(self, monkeypatch) -> None:
         """Should support custom environment variable prefix."""
         monkeypatch.setenv("MY_APP_MAX_COST", "200.0")
 
@@ -186,7 +188,7 @@ class TestEnvPolicySource:
 class TestPolicyStore:
     """Tests for PolicyStore."""
 
-    def test_initialize_loads_policies(self):
+    def test_initialize_loads_policies(self) -> None:
         """Should load policies on initialization."""
         budgets = [
             {
@@ -202,7 +204,7 @@ class TestPolicyStore:
         assert len(store.budgets) == 1
         assert store.budgets[0].id == "test"
 
-    def test_get_budgets_for_context(self):
+    def test_get_budgets_for_context(self) -> None:
         """Should return matching budgets for context."""
         budgets = [
             {
@@ -230,7 +232,7 @@ class TestPolicyStore:
         assert len(matching) == 1
         assert matching[0].id == "global-budget"
 
-    def test_get_effective_budget(self):
+    def test_get_effective_budget(self) -> None:
         """Should return most specific budget."""
         budgets = [
             {
@@ -257,7 +259,7 @@ class TestPolicyStore:
         budget = store.get_effective_budget("prod", "agent1", "other-flow")
         assert budget.id == "tenant-budget"
 
-    def test_get_effective_budget_with_scope_filter(self):
+    def test_get_effective_budget_with_scope_filter(self) -> None:
         """Should filter by scope when requested."""
         budgets = [
             {
@@ -284,7 +286,7 @@ class TestPolicyStore:
         budget = store.get_effective_budget("t1", "s1", "w1", scope=BudgetScope.STRAND)
         assert budget.id == "strand-budget"
 
-    def test_get_routing_policy(self):
+    def test_get_routing_policy(self) -> None:
         """Should return matching routing policy."""
         routing = [
             {
@@ -309,7 +311,7 @@ class TestPolicyStore:
         policy = store.get_routing_policy("t1", "other-agent", "w1")
         assert policy.id == "default-routing"
 
-    def test_get_routing_policy_no_match(self):
+    def test_get_routing_policy_no_match(self) -> None:
         """Should return None when no routing policy matches."""
         routing = [
             {
@@ -324,7 +326,7 @@ class TestPolicyStore:
         policy = store.get_routing_policy("dev", "s1", "w1")
         assert policy is None
 
-    def test_get_pricing(self):
+    def test_get_pricing(self) -> None:
         """Should return pricing data."""
         pricing = {"models": {"gpt-4o": {"input_per_1k": 2.5, "output_per_1k": 10.0}}}
         source = MockPolicySource(pricing=pricing)
@@ -332,7 +334,7 @@ class TestPolicyStore:
 
         assert store.get_pricing() == pricing
 
-    def test_policy_priority_ordering(self):
+    def test_policy_priority_ordering(self) -> None:
         """Budgets should be ordered by priority (most specific first)."""
         budgets = [
             {
@@ -362,7 +364,7 @@ class TestPolicyStore:
         assert store.budgets[1].id == "tenant"
         assert store.budgets[2].id == "global"
 
-    def test_disabled_budget_not_matched(self):
+    def test_disabled_budget_not_matched(self) -> None:
         """Disabled budgets should not be matched."""
         budgets = [
             {

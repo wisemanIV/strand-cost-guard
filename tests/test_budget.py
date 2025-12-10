@@ -20,22 +20,22 @@ from strands_costguard.policies.budget import (
 class TestBudgetMatch:
     """Tests for BudgetMatch."""
 
-    def test_wildcard_matches_all(self):
+    def test_wildcard_matches_all(self) -> None:
         match = BudgetMatch(tenant_id="*", strand_id="*", workflow_id="*")
         assert match.matches("tenant-1", "strand-1", "workflow-1")
         assert match.matches("any", "thing", "works")
 
-    def test_specific_tenant_match(self):
+    def test_specific_tenant_match(self) -> None:
         match = BudgetMatch(tenant_id="tenant-1", strand_id="*", workflow_id="*")
         assert match.matches("tenant-1", "strand-1", "workflow-1")
         assert not match.matches("tenant-2", "strand-1", "workflow-1")
 
-    def test_specific_strand_match(self):
+    def test_specific_strand_match(self) -> None:
         match = BudgetMatch(tenant_id="*", strand_id="analytics", workflow_id="*")
         assert match.matches("tenant-1", "analytics", "workflow-1")
         assert not match.matches("tenant-1", "codegen", "workflow-1")
 
-    def test_full_specific_match(self):
+    def test_full_specific_match(self) -> None:
         match = BudgetMatch(
             tenant_id="tenant-1",
             strand_id="analytics",
@@ -44,7 +44,7 @@ class TestBudgetMatch:
         assert match.matches("tenant-1", "analytics", "report")
         assert not match.matches("tenant-1", "analytics", "other")
 
-    def test_specificity_score(self):
+    def test_specificity_score(self) -> None:
         # Wildcard has lowest score
         assert BudgetMatch().specificity_score() == 0
 
@@ -67,7 +67,7 @@ class TestBudgetMatch:
 class TestBudgetSpec:
     """Tests for BudgetSpec."""
 
-    def test_from_dict_minimal(self):
+    def test_from_dict_minimal(self) -> None:
         data = {
             "id": "test-budget",
             "scope": "tenant",
@@ -81,7 +81,7 @@ class TestBudgetSpec:
         assert budget.max_cost is None
         assert budget.hard_limit is True
 
-    def test_from_dict_full(self):
+    def test_from_dict_full(self) -> None:
         data = {
             "id": "full-budget",
             "scope": "strand",
@@ -109,7 +109,7 @@ class TestBudgetSpec:
         assert budget.on_hard_limit_exceeded == HardLimitAction.HALT_RUN
         assert budget.constraints.max_iterations_per_run == 10
 
-    def test_priority_ordering(self):
+    def test_priority_ordering(self) -> None:
         global_budget = BudgetSpec(
             id="global",
             scope=BudgetScope.GLOBAL,
@@ -135,7 +135,7 @@ class TestBudgetSpec:
         assert tenant_budget.get_priority() < strand_budget.get_priority()
         assert strand_budget.get_priority() < workflow_budget.get_priority()
 
-    def test_threshold_action(self):
+    def test_threshold_action(self) -> None:
         budget = BudgetSpec(
             id="test",
             scope=BudgetScope.TENANT,
@@ -156,7 +156,7 @@ class TestBudgetSpec:
         # At second threshold
         assert budget.get_current_threshold_action(0.9) == ThresholdAction.DOWNGRADE_MODEL
 
-    def test_hard_limit_exceeded(self):
+    def test_hard_limit_exceeded(self) -> None:
         budget = BudgetSpec(
             id="test",
             scope=BudgetScope.TENANT,
@@ -176,21 +176,21 @@ class TestBudgetSpec:
 class TestPeriodBoundaries:
     """Tests for period boundary calculation."""
 
-    def test_hourly_boundaries(self):
+    def test_hourly_boundaries(self) -> None:
         ref = datetime(2024, 6, 15, 14, 30, 45)
         start, end = get_period_boundaries(BudgetPeriod.HOURLY, ref)
 
         assert start == datetime(2024, 6, 15, 14, 0, 0)
         assert end == datetime(2024, 6, 15, 15, 0, 0)
 
-    def test_daily_boundaries(self):
+    def test_daily_boundaries(self) -> None:
         ref = datetime(2024, 6, 15, 14, 30, 45)
         start, end = get_period_boundaries(BudgetPeriod.DAILY, ref)
 
         assert start == datetime(2024, 6, 15, 0, 0, 0)
         assert end == datetime(2024, 6, 16, 0, 0, 0)
 
-    def test_weekly_boundaries(self):
+    def test_weekly_boundaries(self) -> None:
         # Saturday June 15, 2024
         ref = datetime(2024, 6, 15, 14, 30, 45)
         start, end = get_period_boundaries(BudgetPeriod.WEEKLY, ref)
@@ -199,14 +199,14 @@ class TestPeriodBoundaries:
         assert start == datetime(2024, 6, 10, 0, 0, 0)
         assert end == datetime(2024, 6, 17, 0, 0, 0)
 
-    def test_monthly_boundaries(self):
+    def test_monthly_boundaries(self) -> None:
         ref = datetime(2024, 6, 15, 14, 30, 45)
         start, end = get_period_boundaries(BudgetPeriod.MONTHLY, ref)
 
         assert start == datetime(2024, 6, 1, 0, 0, 0)
         assert end == datetime(2024, 7, 1, 0, 0, 0)
 
-    def test_monthly_december(self):
+    def test_monthly_december(self) -> None:
         ref = datetime(2024, 12, 15, 14, 30, 45)
         start, end = get_period_boundaries(BudgetPeriod.MONTHLY, ref)
 
@@ -217,7 +217,7 @@ class TestPeriodBoundaries:
 class TestBudgetTracker:
     """Tests for BudgetTracker."""
 
-    def test_register_and_get_run(self):
+    def test_register_and_get_run(self) -> None:
         tracker = BudgetTracker()
         context = RunContext.create(
             tenant_id="t1",
@@ -238,7 +238,7 @@ class TestBudgetTracker:
         assert retrieved is not None
         assert retrieved.context.tenant_id == "t1"
 
-    def test_update_run_cost(self):
+    def test_update_run_cost(self) -> None:
         tracker = BudgetTracker()
         context = RunContext.create(
             tenant_id="t1",
@@ -262,7 +262,7 @@ class TestBudgetTracker:
         assert updated.total_output_tokens == 50
         assert updated.model_costs["gpt-4"] == 0.05
 
-    def test_unregister_run_updates_period(self):
+    def test_unregister_run_updates_period(self) -> None:
         tracker = BudgetTracker()
         context = RunContext.create(
             tenant_id="t1",
@@ -299,7 +299,7 @@ class TestBudgetTracker:
         assert state.usage.total_cost == 1.50
         assert state.usage.total_runs == 1
 
-    def test_concurrent_runs_tracking(self):
+    def test_concurrent_runs_tracking(self) -> None:
         tracker = BudgetTracker()
         budget = BudgetSpec(
             id="test",
@@ -324,7 +324,7 @@ class TestBudgetTracker:
         state = tracker.get_or_create_budget_state(budget, "t1", "s1", "w1")
         assert state.concurrent_runs == 3
 
-    def test_check_budget_limits(self):
+    def test_check_budget_limits(self) -> None:
         tracker = BudgetTracker()
         budget = BudgetSpec(
             id="test",

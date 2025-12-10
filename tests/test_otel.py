@@ -12,7 +12,7 @@ from strands_costguard.metrics.otel import (
 
 
 @pytest.fixture
-def mock_meter():
+def mock_meter() -> MagicMock:
     """Create a mock meter with mock instruments."""
     meter = MagicMock()
     meter.create_counter.return_value = MagicMock()
@@ -20,7 +20,7 @@ def mock_meter():
 
 
 @pytest.fixture
-def run_context():
+def run_context() -> RunContext:
     """Create a sample run context."""
     return RunContext.create(
         tenant_id="tenant-1",
@@ -31,7 +31,7 @@ def run_context():
 
 
 @pytest.fixture
-def run_state(run_context):
+def run_state(run_context: RunContext) -> RunState:
     """Create a sample run state."""
     state = RunState(context=run_context)
     state.status = "completed"
@@ -42,7 +42,7 @@ class TestMetricsEmitter:
     """Tests for MetricsEmitter."""
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_initialization_creates_instruments(self, mock_get_meter, mock_meter):
+    def test_initialization_creates_instruments(self, mock_get_meter, mock_meter) -> None:
         """Should create metric instruments on initialization."""
         mock_get_meter.return_value = mock_meter
 
@@ -52,7 +52,7 @@ class TestMetricsEmitter:
         assert mock_meter.create_counter.call_count >= 5  # Multiple counters created
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_record_run_start(self, mock_get_meter, mock_meter, run_context):
+    def test_record_run_start(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should record run start event."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -68,7 +68,7 @@ class TestMetricsEmitter:
         assert call_args[1]["attributes"]["strands.event"] == "start"
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_record_run_end(self, mock_get_meter, mock_meter, run_state):
+    def test_record_run_end(self, mock_get_meter, mock_meter, run_state) -> None:
         """Should record run end event with costs."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -83,7 +83,7 @@ class TestMetricsEmitter:
         assert mock_counter.add.call_count >= 1
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_record_model_cost(self, mock_get_meter, mock_meter, run_context):
+    def test_record_model_cost(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should record model cost and token usage."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -103,7 +103,7 @@ class TestMetricsEmitter:
         assert mock_counter.add.call_count >= 1
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_record_tool_cost(self, mock_get_meter, mock_meter, run_context):
+    def test_record_tool_cost(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should record tool cost."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -118,7 +118,7 @@ class TestMetricsEmitter:
         assert mock_counter.add.call_count >= 1
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_record_iteration(self, mock_get_meter, mock_meter, run_context):
+    def test_record_iteration(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should record iteration."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -135,7 +135,7 @@ class TestMetricsEmitter:
         assert "strands.iteration_idx" in call_args[1]["attributes"]
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_record_downgrade(self, mock_get_meter, mock_meter, run_context):
+    def test_record_downgrade(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should record model downgrade event."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -157,7 +157,7 @@ class TestMetricsEmitter:
         assert attrs["genai.model.fallback"] == "gpt-4o-mini"
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_record_rejection(self, mock_get_meter, mock_meter, run_context):
+    def test_record_rejection(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should record run rejection event."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -171,7 +171,7 @@ class TestMetricsEmitter:
         assert call_args[1]["attributes"]["strands.reason"] == "budget exceeded"
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_record_iteration_halt(self, mock_get_meter, mock_meter, run_context):
+    def test_record_iteration_halt(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should record iteration halt event."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -185,7 +185,7 @@ class TestMetricsEmitter:
         assert "max iterations" in call_args[1]["attributes"]["strands.reason"]
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_exclude_run_id_by_default(self, mock_get_meter, mock_meter, run_context):
+    def test_exclude_run_id_by_default(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should exclude run_id from attributes by default (high cardinality)."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -199,7 +199,7 @@ class TestMetricsEmitter:
         assert "strands.run_id" not in attrs
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_include_run_id_when_enabled(self, mock_get_meter, mock_meter, run_context):
+    def test_include_run_id_when_enabled(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should include run_id when explicitly enabled."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -214,7 +214,7 @@ class TestMetricsEmitter:
         assert attrs["strands.run_id"] == "run-123"
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_reason_truncation(self, mock_get_meter, mock_meter, run_context):
+    def test_reason_truncation(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should truncate long reasons to avoid attribute limits."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()
@@ -230,7 +230,7 @@ class TestMetricsEmitter:
         assert len(attrs["strands.reason"]) == 100
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_handles_meter_exception(self, mock_get_meter):
+    def test_handles_meter_exception(self, mock_get_meter) -> None:
         """Should handle exceptions during meter setup gracefully."""
         mock_get_meter.side_effect = Exception("Meter not available")
 
@@ -239,7 +239,7 @@ class TestMetricsEmitter:
         assert emitter._meter is None
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_noop_when_instruments_not_initialized(self, mock_get_meter, run_context):
+    def test_noop_when_instruments_not_initialized(self, mock_get_meter, run_context) -> None:
         """Should be no-op when instruments are not initialized."""
         mock_get_meter.side_effect = Exception("Meter not available")
 
@@ -251,7 +251,7 @@ class TestMetricsEmitter:
         emitter.record_iteration_halt(run_context, "test")
 
     @patch("strands_costguard.metrics.otel.metrics.get_meter")
-    def test_base_attributes_include_context_fields(self, mock_get_meter, mock_meter, run_context):
+    def test_base_attributes_include_context_fields(self, mock_get_meter, mock_meter, run_context) -> None:
         """Should include tenant, strand, workflow in base attributes."""
         mock_get_meter.return_value = mock_meter
         mock_counter = MagicMock()

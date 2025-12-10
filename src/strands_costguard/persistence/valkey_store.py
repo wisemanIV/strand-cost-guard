@@ -106,7 +106,7 @@ class ValkeyBudgetStore:
         data = self._client.get(key)
         if data is None:
             return None
-        return BudgetStateData.from_json(data.decode("utf-8"))
+        return BudgetStateData.from_json(data.decode("utf-8"))  # type: ignore[union-attr]
 
     def set(
         self,
@@ -136,7 +136,7 @@ class ValkeyBudgetStore:
             True if deleted, False if not found
         """
         key = self._make_key(scope_key)
-        return self._client.delete(key) > 0
+        return self._client.delete(key) > 0  # type: ignore[operator]
 
     def get_or_create(
         self,
@@ -214,7 +214,7 @@ class ValkeyBudgetStore:
                     self._client.unwatch()
                     return None
 
-                state = BudgetStateData.from_json(data.decode("utf-8"))
+                state = BudgetStateData.from_json(data.decode("utf-8"))  # type: ignore[union-attr]
                 state.total_cost += cost
                 state.total_input_tokens += input_tokens
                 state.total_output_tokens += output_tokens
@@ -227,7 +227,7 @@ class ValkeyBudgetStore:
 
                 pipe = self._client.pipeline(True)
                 pipe.set(key, state.to_json())
-                pipe.execute()
+                pipe.execute()  # type: ignore[no-untyped-call]
                 return state
 
             except Exception as e:
@@ -258,14 +258,14 @@ class ValkeyBudgetStore:
                     self._client.unwatch()
                     return None
 
-                state = BudgetStateData.from_json(data.decode("utf-8"))
+                state = BudgetStateData.from_json(data.decode("utf-8"))  # type: ignore[union-attr]
                 state.total_runs += 1
                 if run_id not in state.concurrent_run_ids:
                     state.concurrent_run_ids.append(run_id)
 
                 pipe = self._client.pipeline(True)
                 pipe.set(key, state.to_json())
-                pipe.execute()
+                pipe.execute()  # type: ignore[no-untyped-call]
                 return state.total_runs
 
             except Exception:
@@ -293,13 +293,13 @@ class ValkeyBudgetStore:
                     self._client.unwatch()
                     return None
 
-                state = BudgetStateData.from_json(data.decode("utf-8"))
+                state = BudgetStateData.from_json(data.decode("utf-8"))  # type: ignore[union-attr]
                 if run_id in state.concurrent_run_ids:
                     state.concurrent_run_ids.remove(run_id)
 
                 pipe = self._client.pipeline(True)
                 pipe.set(key, state.to_json())
-                pipe.execute()
+                pipe.execute()  # type: ignore[no-untyped-call]
                 return len(state.concurrent_run_ids)
 
             except Exception:
@@ -333,4 +333,4 @@ class ValkeyBudgetStore:
         full_pattern = f"{self._key_prefix}{pattern}"
         keys = self._client.keys(full_pattern)
         prefix_len = len(self._key_prefix)
-        return [k.decode("utf-8")[prefix_len:] for k in keys]
+        return [k.decode("utf-8")[prefix_len:] for k in keys]  # type: ignore[union-attr]

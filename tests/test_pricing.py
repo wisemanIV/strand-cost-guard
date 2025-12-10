@@ -13,7 +13,7 @@ from strands_costguard.pricing.table import (
 class TestModelPricing:
     """Tests for ModelPricing."""
 
-    def test_basic_cost_calculation(self):
+    def test_basic_cost_calculation(self) -> None:
         pricing = ModelPricing(
             model_name="test-model",
             input_per_1k=1.0,
@@ -29,7 +29,7 @@ class TestModelPricing:
         # 500 tokens * $2/1k = $1.00 output
         assert cost == 2.0
 
-    def test_fractional_tokens(self):
+    def test_fractional_tokens(self) -> None:
         pricing = ModelPricing(
             model_name="test-model",
             input_per_1k=1.0,
@@ -45,7 +45,7 @@ class TestModelPricing:
         # 100/1000 * $2.00 = $0.20
         assert cost == pytest.approx(0.45)
 
-    def test_cached_tokens(self):
+    def test_cached_tokens(self) -> None:
         pricing = ModelPricing(
             model_name="test-model",
             input_per_1k=1.0,
@@ -64,7 +64,7 @@ class TestModelPricing:
         # Output: 500 tokens * $2/1k = $1.00
         assert cost == pytest.approx(1.75)
 
-    def test_reasoning_tokens(self):
+    def test_reasoning_tokens(self) -> None:
         pricing = ModelPricing(
             model_name="o1-mini",
             input_per_1k=3.0,
@@ -83,7 +83,7 @@ class TestModelPricing:
         # Reasoning: 2000 * $12/1k = $24.00
         assert cost == pytest.approx(33.0)
 
-    def test_estimate_cost(self):
+    def test_estimate_cost(self) -> None:
         pricing = ModelPricing(
             model_name="test-model",
             input_per_1k=1.0,
@@ -100,7 +100,7 @@ class TestModelPricing:
 class TestToolPricing:
     """Tests for ToolPricing."""
 
-    def test_fixed_cost_per_call(self):
+    def test_fixed_cost_per_call(self) -> None:
         pricing = ToolPricing(
             tool_name="web_search",
             cost_per_call=0.01,
@@ -109,7 +109,7 @@ class TestToolPricing:
         cost = pricing.calculate_cost()
         assert cost == 0.01
 
-    def test_data_based_pricing(self):
+    def test_data_based_pricing(self) -> None:
         pricing = ToolPricing(
             tool_name="file_upload",
             cost_per_call=0.0,
@@ -120,7 +120,7 @@ class TestToolPricing:
         cost = pricing.calculate_cost(input_size_bytes=1_000_000)  # 1 MB
         assert cost == pytest.approx(1.0)
 
-    def test_combined_pricing(self):
+    def test_combined_pricing(self) -> None:
         pricing = ToolPricing(
             tool_name="expensive_tool",
             cost_per_call=0.05,
@@ -141,21 +141,21 @@ class TestToolPricing:
 class TestPricingTable:
     """Tests for PricingTable."""
 
-    def test_default_pricing_loaded(self):
+    def test_default_pricing_loaded(self) -> None:
         table = PricingTable()
 
         # Should have default models
         assert "gpt-4o" in table.models
         assert "claude-3.5-sonnet" in table.models
 
-    def test_get_known_model(self):
+    def test_get_known_model(self) -> None:
         table = PricingTable()
 
         pricing = table.get_model_pricing("gpt-4o-mini")
         assert pricing.model_name == "gpt-4o-mini"
         assert pricing.input_per_1k == DEFAULT_MODEL_PRICING["gpt-4o-mini"]["input_per_1k"]
 
-    def test_get_unknown_model_fallback(self):
+    def test_get_unknown_model_fallback(self) -> None:
         table = PricingTable(
             fallback_input_per_1k=5.0,
             fallback_output_per_1k=10.0,
@@ -166,7 +166,7 @@ class TestPricingTable:
         assert pricing.input_per_1k == 5.0
         assert pricing.output_per_1k == 10.0
 
-    def test_prefix_matching(self):
+    def test_prefix_matching(self) -> None:
         table = PricingTable()
 
         # Version suffix should match base model
@@ -174,7 +174,7 @@ class TestPricingTable:
         pricing = table.get_model_pricing("claude-3.5-sonnet-20241022")
         assert pricing.input_per_1k == DEFAULT_MODEL_PRICING["claude-3.5-sonnet"]["input_per_1k"]
 
-    def test_calculate_model_cost(self):
+    def test_calculate_model_cost(self) -> None:
         table = PricingTable()
 
         cost = table.calculate_model_cost(
@@ -186,7 +186,7 @@ class TestPricingTable:
         expected = (1000 / 1000 * 0.15) + (500 / 1000 * 0.60)
         assert cost == pytest.approx(expected)
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         data = {
             "currency": "USD",
             "fallback_input_per_1k": 2.0,
@@ -213,7 +213,7 @@ class TestPricingTable:
         assert table.models["custom-model"].cached_input_per_1k == 0.75
         assert "custom-tool" in table.tools
 
-    def test_tool_pricing_default_zero(self):
+    def test_tool_pricing_default_zero(self) -> None:
         table = PricingTable()
 
         pricing = table.get_tool_pricing("unknown-tool")

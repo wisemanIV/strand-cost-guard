@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class BudgetScope(str, Enum):
@@ -122,7 +123,7 @@ class BudgetSpec:
         return self.hard_limit and utilization >= 1.0
 
     @classmethod
-    def from_dict(cls, data: dict) -> "BudgetSpec":
+    def from_dict(cls, data: dict[str, Any]) -> "BudgetSpec":
         """Create a BudgetSpec from a dictionary (e.g., parsed from YAML)."""
         match_data = data.get("match", {})
         match = BudgetMatch(

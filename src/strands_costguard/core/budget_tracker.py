@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from threading import Lock
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from strands_costguard.core.entities import PeriodUsage, RunState
 from strands_costguard.policies.budget import BudgetPeriod, BudgetScope, BudgetSpec
@@ -360,7 +360,7 @@ class BudgetTracker:
         strand_id: str,
         workflow_id: str,
         budgets: list[BudgetSpec],
-    ) -> dict[str, dict]:
+    ) -> dict[str, dict[str, Any]]:
         """Get a summary of budget usage for all applicable budgets."""
         summary = {}
 

@@ -76,7 +76,7 @@ class MockPolicySource:
 class TestIntegrationWithOpenAIAPI:
     """Integration tests using the OpenAI API."""
 
-    def test_simple_agent_with_cost_tracking(self):
+    def test_simple_agent_with_cost_tracking(self) -> None:
         """Test that CostGuard tracks costs for a simple agent interaction."""
         budgets = [
             {
@@ -117,7 +117,7 @@ class TestIntegrationWithOpenAIAPI:
         assert model_decision.allowed is True
 
         # Create agent and make a real API call
-        model = OpenAIModel(model_id="gpt-4o-mini", max_tokens=100)
+        model = OpenAIModel(model_id="gpt-4o-mini")
         agent = Agent(model=model)
 
         # Simple prompt to minimize token usage
@@ -155,7 +155,7 @@ class TestIntegrationWithOpenAIAPI:
 
         guard.shutdown()
 
-    def test_budget_enforcement_blocks_expensive_runs(self):
+    def test_budget_enforcement_blocks_expensive_runs(self) -> None:
         """Test that budget enforcement rejects runs when budget is exceeded."""
         budgets = [
             {
@@ -189,7 +189,7 @@ class TestIntegrationWithOpenAIAPI:
         assert admission_1.allowed is True
 
         # Make a real API call
-        model = OpenAIModel(model_id="gpt-4o-mini", max_tokens=100)
+        model = OpenAIModel(model_id="gpt-4o-mini")
         agent = Agent(model=model)
         result = agent("Say 'Hi'")
 
@@ -221,7 +221,7 @@ class TestIntegrationWithOpenAIAPI:
 
         guard.shutdown()
 
-    def test_model_routing_with_real_api(self):
+    def test_model_routing_with_real_api(self) -> None:
         """Test that model routing works with real API calls."""
         routing = [
             {
@@ -268,7 +268,7 @@ class TestIntegrationWithOpenAIAPI:
         assert planning_decision.max_tokens == 100
 
         # Make real API call with the routed model
-        model = OpenAIModel(model_id=planning_decision.effective_model, max_tokens=100)
+        model = OpenAIModel(model_id=planning_decision.effective_model)
         agent = Agent(model=model)
         result = agent("Say 'Test'")
 

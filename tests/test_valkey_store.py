@@ -16,7 +16,7 @@ from strands_costguard.persistence.valkey_store import (
 class TestBudgetStateData:
     """Tests for BudgetStateData dataclass."""
 
-    def test_to_json(self):
+    def test_to_json(self) -> None:
         """Should serialize to JSON."""
         state = BudgetStateData(
             budget_id="test-budget",
@@ -34,7 +34,7 @@ class TestBudgetStateData:
         assert parsed["total_cost"] == 50.0
         assert parsed["total_runs"] == 10
 
-    def test_from_json(self):
+    def test_from_json(self) -> None:
         """Should deserialize from JSON."""
         data = {
             "budget_id": "test-budget",
@@ -59,7 +59,7 @@ class TestBudgetStateData:
         assert state.model_costs["gpt-4o"] == 50.0
         assert len(state.concurrent_run_ids) == 2
 
-    def test_roundtrip_serialization(self):
+    def test_roundtrip_serialization(self) -> None:
         """Should survive roundtrip serialization."""
         original = BudgetStateData(
             budget_id="test",
@@ -83,27 +83,27 @@ class TestValkeyBudgetStore:
     """Tests for ValkeyBudgetStore."""
 
     @pytest.fixture
-    def mock_client(self):
+    def mock_client(self) -> MagicMock:
         """Create a mock Valkey client."""
         return MagicMock()
 
     @pytest.fixture
-    def store(self, mock_client):
+    def store(self, mock_client: MagicMock) -> ValkeyBudgetStore:
         """Create a ValkeyBudgetStore with mock client."""
         return ValkeyBudgetStore(client=mock_client)
 
-    def test_make_key(self, store):
+    def test_make_key(self, store) -> None:
         """Should create properly prefixed keys."""
         key = store._make_key("tenant:prod:budget-1")
         assert key == f"{KEY_PREFIX}tenant:prod:budget-1"
 
-    def test_custom_key_prefix(self, mock_client):
+    def test_custom_key_prefix(self, mock_client) -> None:
         """Should support custom key prefix."""
         store = ValkeyBudgetStore(client=mock_client, key_prefix="my_app:")
         key = store._make_key("test")
         assert key == "my_app:test"
 
-    def test_get_returns_state(self, store, mock_client):
+    def test_get_returns_state(self, store, mock_client) -> None:
         """Should return BudgetStateData when key exists."""
         state_data = BudgetStateData(
             budget_id="test",
@@ -120,7 +120,7 @@ class TestValkeyBudgetStore:
         assert result.budget_id == "test"
         assert result.total_cost == 50.0
 
-    def test_get_returns_none_when_not_found(self, store, mock_client):
+    def test_get_returns_none_when_not_found(self, store, mock_client) -> None:
         """Should return None when key doesn't exist."""
         mock_client.get.return_value = None
 
@@ -128,7 +128,7 @@ class TestValkeyBudgetStore:
 
         assert result is None
 
-    def test_set_stores_data(self, store, mock_client):
+    def test_set_stores_data(self, store, mock_client) -> None:
         """Should store state data."""
         state = BudgetStateData(
             budget_id="test",
@@ -143,7 +143,7 @@ class TestValkeyBudgetStore:
         call_args = mock_client.set.call_args
         assert f"{KEY_PREFIX}tenant:t1:b1" in call_args[0]
 
-    def test_set_with_expiration(self, store, mock_client):
+    def test_set_with_expiration(self, store, mock_client) -> None:
         """Should set expiration when provided."""
         state = BudgetStateData(
             budget_id="test",
@@ -157,7 +157,7 @@ class TestValkeyBudgetStore:
 
         mock_client.expireat.assert_called_once()
 
-    def test_delete_existing_key(self, store, mock_client):
+    def test_delete_existing_key(self, store, mock_client) -> None:
         """Should return True when key is deleted."""
         mock_client.delete.return_value = 1
 
@@ -166,7 +166,7 @@ class TestValkeyBudgetStore:
         assert result is True
         mock_client.delete.assert_called_once()
 
-    def test_delete_nonexistent_key(self, store, mock_client):
+    def test_delete_nonexistent_key(self, store, mock_client) -> None:
         """Should return False when key doesn't exist."""
         mock_client.delete.return_value = 0
 
@@ -174,7 +174,7 @@ class TestValkeyBudgetStore:
 
         assert result is False
 
-    def test_get_or_create_returns_existing(self, store, mock_client):
+    def test_get_or_create_returns_existing(self, store, mock_client) -> None:
         """Should return existing state when valid."""
         future_end = (datetime.utcnow() + timedelta(days=7)).isoformat()
         state_data = BudgetStateData(
@@ -196,7 +196,7 @@ class TestValkeyBudgetStore:
         assert result.total_cost == 50.0
         mock_client.set.assert_not_called()  # Shouldn't create new
 
-    def test_get_or_create_creates_new(self, store, mock_client):
+    def test_get_or_create_creates_new(self, store, mock_client) -> None:
         """Should create new state when key doesn't exist."""
         mock_client.get.return_value = None
 
@@ -211,7 +211,7 @@ class TestValkeyBudgetStore:
         assert result.total_cost == 0.0
         mock_client.set.assert_called_once()
 
-    def test_get_or_create_resets_expired(self, store, mock_client):
+    def test_get_or_create_resets_expired(self, store, mock_client) -> None:
         """Should reset state when period has expired."""
         past_end = (datetime.utcnow() - timedelta(days=1)).isoformat()
         state_data = BudgetStateData(
@@ -233,7 +233,7 @@ class TestValkeyBudgetStore:
         assert result.total_cost == 0.0  # Reset
         mock_client.set.assert_called_once()
 
-    def test_increment_cost(self, store, mock_client):
+    def test_increment_cost(self, store, mock_client) -> None:
         """Should increment cost atomically."""
         state_data = BudgetStateData(
             budget_id="test",
@@ -262,7 +262,7 @@ class TestValkeyBudgetStore:
         assert result.model_costs["gpt-4o"] == 10.0
         mock_pipe.execute.assert_called_once()
 
-    def test_increment_cost_with_tool(self, store, mock_client):
+    def test_increment_cost_with_tool(self, store, mock_client) -> None:
         """Should track tool costs and calls."""
         state_data = BudgetStateData(
             budget_id="test",
@@ -284,7 +284,7 @@ class TestValkeyBudgetStore:
         assert result.tool_costs["web_search"] == 0.05
         assert result.total_tool_calls == 1
 
-    def test_increment_cost_returns_none_when_not_found(self, store, mock_client):
+    def test_increment_cost_returns_none_when_not_found(self, store, mock_client) -> None:
         """Should return None when scope key doesn't exist."""
         mock_client.get.return_value = None
 
@@ -292,7 +292,7 @@ class TestValkeyBudgetStore:
 
         assert result is None
 
-    def test_increment_run_count(self, store, mock_client):
+    def test_increment_run_count(self, store, mock_client) -> None:
         """Should increment run count and track concurrent run."""
         state_data = BudgetStateData(
             budget_id="test",
@@ -311,7 +311,7 @@ class TestValkeyBudgetStore:
         assert result == 6  # New total runs
         mock_pipe.execute.assert_called_once()
 
-    def test_increment_run_count_no_duplicate(self, store, mock_client):
+    def test_increment_run_count_no_duplicate(self, store, mock_client) -> None:
         """Should not add duplicate run IDs."""
         state_data = BudgetStateData(
             budget_id="test",
@@ -331,7 +331,7 @@ class TestValkeyBudgetStore:
         # The set call should still happen but concurrent_run_ids should not grow
         mock_pipe.execute.assert_called_once()
 
-    def test_remove_concurrent_run(self, store, mock_client):
+    def test_remove_concurrent_run(self, store, mock_client) -> None:
         """Should remove run from concurrent tracking."""
         state_data = BudgetStateData(
             budget_id="test",
@@ -349,7 +349,7 @@ class TestValkeyBudgetStore:
         assert result == 2  # Remaining concurrent runs
         mock_pipe.execute.assert_called_once()
 
-    def test_remove_concurrent_run_not_present(self, store, mock_client):
+    def test_remove_concurrent_run_not_present(self, store, mock_client) -> None:
         """Should handle removing non-existent run ID."""
         state_data = BudgetStateData(
             budget_id="test",
@@ -367,7 +367,7 @@ class TestValkeyBudgetStore:
         assert result == 1  # Still 1 concurrent run
         mock_pipe.execute.assert_called_once()
 
-    def test_get_concurrent_run_count(self, store, mock_client):
+    def test_get_concurrent_run_count(self, store, mock_client) -> None:
         """Should return current concurrent run count."""
         state_data = BudgetStateData(
             budget_id="test",
@@ -382,7 +382,7 @@ class TestValkeyBudgetStore:
 
         assert result == 3
 
-    def test_get_concurrent_run_count_not_found(self, store, mock_client):
+    def test_get_concurrent_run_count_not_found(self, store, mock_client) -> None:
         """Should return 0 when scope key doesn't exist."""
         mock_client.get.return_value = None
 
@@ -390,7 +390,7 @@ class TestValkeyBudgetStore:
 
         assert result == 0
 
-    def test_list_budgets(self, store, mock_client):
+    def test_list_budgets(self, store, mock_client) -> None:
         """Should list budget scope keys matching pattern."""
         mock_client.keys.return_value = [
             f"{KEY_PREFIX}tenant:prod:budget-1".encode(),
@@ -403,7 +403,7 @@ class TestValkeyBudgetStore:
         assert "tenant:prod:budget-1" in result
         assert "tenant:prod:budget-2" in result
 
-    def test_list_budgets_empty(self, store, mock_client):
+    def test_list_budgets_empty(self, store, mock_client) -> None:
         """Should return empty list when no matches."""
         mock_client.keys.return_value = []
 
@@ -411,7 +411,7 @@ class TestValkeyBudgetStore:
 
         assert result == []
 
-    def test_retry_on_watch_error(self, store, mock_client):
+    def test_retry_on_watch_error(self, store, mock_client) -> None:
         """Should retry on optimistic locking failures."""
         state_data = BudgetStateData(
             budget_id="test",

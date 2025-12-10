@@ -31,7 +31,7 @@ class MockPolicySource:
 class TestCostGuardLifecycle:
     """Tests for Cost Guard lifecycle hooks."""
 
-    def test_run_admission_no_budgets(self):
+    def test_run_admission_no_budgets(self) -> None:
         """Run should be admitted when no budgets are configured."""
         config = CostGuardConfig(
             policy_source=MockPolicySource(),
@@ -48,7 +48,7 @@ class TestCostGuardLifecycle:
 
         assert decision.allowed is True
 
-    def test_run_admission_with_budget(self):
+    def test_run_admission_with_budget(self) -> None:
         """Run should be admitted when under budget."""
         budgets = [
             {
@@ -75,7 +75,7 @@ class TestCostGuardLifecycle:
         assert decision.remaining_budget == 100.0
         assert decision.budget_utilization == 0.0
 
-    def test_run_rejection_budget_exceeded(self):
+    def test_run_rejection_budget_exceeded(self) -> None:
         """Run should be rejected when budget is exceeded."""
         budgets = [
             {
@@ -106,7 +106,7 @@ class TestCostGuardLifecycle:
         assert decision.allowed is False
         assert "exceeded" in decision.reason.lower()
 
-    def test_iteration_proceeds_under_limit(self):
+    def test_iteration_proceeds_under_limit(self) -> None:
         """Iteration should proceed when under limits."""
         budgets = [
             {
@@ -128,7 +128,7 @@ class TestCostGuardLifecycle:
         assert decision.allowed is True
         assert decision.remaining_iterations == 10
 
-    def test_iteration_halted_at_limit(self):
+    def test_iteration_halted_at_limit(self) -> None:
         """Iteration should be halted when max iterations reached."""
         budgets = [
             {
@@ -156,7 +156,7 @@ class TestCostGuardLifecycle:
         assert decision.allowed is False
         assert "max iterations" in decision.reason.lower()
 
-    def test_model_call_allowed(self):
+    def test_model_call_allowed(self) -> None:
         """Model call should be allowed under normal conditions."""
         config = CostGuardConfig(
             policy_source=MockPolicySource(),
@@ -176,7 +176,7 @@ class TestCostGuardLifecycle:
         assert decision.allowed is True
         assert decision.effective_model == "gpt-4o"
 
-    def test_model_call_records_cost(self):
+    def test_model_call_records_cost(self) -> None:
         """Model call should record cost correctly."""
         config = CostGuardConfig(
             policy_source=MockPolicySource(),
@@ -196,7 +196,7 @@ class TestCostGuardLifecycle:
         run_cost = guard.get_run_cost("run-1")
         assert run_cost > 0
 
-    def test_tool_call_allowed(self):
+    def test_tool_call_allowed(self) -> None:
         """Tool call should be allowed under normal conditions."""
         config = CostGuardConfig(
             policy_source=MockPolicySource(),
@@ -210,7 +210,7 @@ class TestCostGuardLifecycle:
 
         assert decision.allowed is True
 
-    def test_tool_call_rejected_at_limit(self):
+    def test_tool_call_rejected_at_limit(self) -> None:
         """Tool call should be rejected when max calls reached."""
         budgets = [
             {
@@ -239,7 +239,7 @@ class TestCostGuardLifecycle:
         assert decision.allowed is False
         assert "max tool calls" in decision.reason.lower()
 
-    def test_budget_summary(self):
+    def test_budget_summary(self) -> None:
         """Budget summary should return correct information."""
         budgets = [
             {
@@ -274,7 +274,7 @@ class TestCostGuardLifecycle:
 class TestCostGuardRouting:
     """Tests for Cost Guard model routing."""
 
-    def test_routing_with_policy(self):
+    def test_routing_with_policy(self) -> None:
         """Model should be routed according to policy."""
         routing = [
             {
@@ -313,7 +313,7 @@ class TestCostGuardRouting:
         decision = guard.before_model_call("run-1", "gpt-4o", "synthesis", 500)
         assert decision.effective_model == "gpt-4o"
 
-    def test_model_downgrade_on_threshold(self):
+    def test_model_downgrade_on_threshold(self) -> None:
         """Model should be downgraded when soft threshold exceeded."""
         budgets = [
             {
@@ -365,7 +365,7 @@ class TestCostGuardRouting:
 class TestCostGuardDisabled:
     """Tests for disabled Cost Guard features."""
 
-    def test_budget_enforcement_disabled(self):
+    def test_budget_enforcement_disabled(self) -> None:
         """Budget enforcement can be disabled."""
         budgets = [
             {
@@ -394,7 +394,7 @@ class TestCostGuardDisabled:
         decision = guard.on_run_start("t1", "s1", "w1", "run-2")
         assert decision.allowed is True
 
-    def test_routing_disabled(self):
+    def test_routing_disabled(self) -> None:
         """Routing can be disabled."""
         routing = [
             {

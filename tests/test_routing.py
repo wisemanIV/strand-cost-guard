@@ -11,13 +11,13 @@ from strands_costguard.routing.router import ModelCallContext
 class TestDowngradeTrigger:
     """Tests for DowngradeTrigger."""
 
-    def test_no_trigger(self):
+    def test_no_trigger(self) -> None:
         trigger = DowngradeTrigger()
         should, reason = trigger.should_downgrade()
         assert should is False
         assert reason == ""
 
-    def test_soft_threshold_trigger(self):
+    def test_soft_threshold_trigger(self) -> None:
         trigger = DowngradeTrigger(soft_threshold_exceeded=True)
 
         # Should not trigger when threshold not exceeded
@@ -29,7 +29,7 @@ class TestDowngradeTrigger:
         assert should is True
         assert "threshold" in reason.lower()
 
-    def test_remaining_budget_trigger(self):
+    def test_remaining_budget_trigger(self) -> None:
         trigger = DowngradeTrigger(remaining_budget_below=10.0)
 
         # Should not trigger when budget is sufficient
@@ -41,7 +41,7 @@ class TestDowngradeTrigger:
         assert should is True
         assert "budget" in reason.lower()
 
-    def test_iteration_count_trigger(self):
+    def test_iteration_count_trigger(self) -> None:
         trigger = DowngradeTrigger(iteration_count_above=5)
 
         # Should not trigger when iterations are low
@@ -53,7 +53,7 @@ class TestDowngradeTrigger:
         assert should is True
         assert "iteration" in reason.lower()
 
-    def test_latency_trigger(self):
+    def test_latency_trigger(self) -> None:
         trigger = DowngradeTrigger(latency_above_ms=1000.0)
 
         # Should not trigger when latency is low
@@ -65,7 +65,7 @@ class TestDowngradeTrigger:
         assert should is True
         assert "latency" in reason.lower()
 
-    def test_multiple_triggers(self):
+    def test_multiple_triggers(self) -> None:
         trigger = DowngradeTrigger(
             soft_threshold_exceeded=True,
             remaining_budget_below=10.0,
@@ -79,7 +79,7 @@ class TestDowngradeTrigger:
         assert should is True
         assert "threshold" in reason.lower()
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         data = {
             "soft_threshold_exceeded": True,
             "remaining_budget_below": 5.0,
@@ -95,7 +95,7 @@ class TestDowngradeTrigger:
 class TestStageConfig:
     """Tests for StageConfig."""
 
-    def test_basic_model_selection(self):
+    def test_basic_model_selection(self) -> None:
         config = StageConfig(
             stage="planning",
             default_model="gpt-4o-mini",
@@ -106,7 +106,7 @@ class TestStageConfig:
         assert downgraded is False
         assert reason == ""
 
-    def test_fallback_without_trigger(self):
+    def test_fallback_without_trigger(self) -> None:
         config = StageConfig(
             stage="synthesis",
             default_model="gpt-4o",
@@ -118,7 +118,7 @@ class TestStageConfig:
         assert model == "gpt-4o"
         assert downgraded is False
 
-    def test_fallback_with_trigger(self):
+    def test_fallback_with_trigger(self) -> None:
         config = StageConfig(
             stage="synthesis",
             default_model="gpt-4o",
@@ -131,7 +131,7 @@ class TestStageConfig:
         assert downgraded is True
         assert reason != ""
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         data = {
             "stage": "planning",
             "default_model": "gpt-4o-mini",
@@ -153,7 +153,7 @@ class TestStageConfig:
 class TestRoutingPolicy:
     """Tests for RoutingPolicy."""
 
-    def test_wildcard_match(self):
+    def test_wildcard_match(self) -> None:
         policy = RoutingPolicy(
             id="default",
             match={"strand_id": "*"},
@@ -161,7 +161,7 @@ class TestRoutingPolicy:
 
         assert policy.matches_context("any-tenant", "any-strand", "any-workflow")
 
-    def test_specific_match(self):
+    def test_specific_match(self) -> None:
         policy = RoutingPolicy(
             id="specific",
             match={
@@ -174,7 +174,7 @@ class TestRoutingPolicy:
         assert not policy.matches_context("dev", "analytics", "any-workflow")
         assert not policy.matches_context("prod", "codegen", "any-workflow")
 
-    def test_disabled_policy(self):
+    def test_disabled_policy(self) -> None:
         policy = RoutingPolicy(
             id="disabled",
             match={"strand_id": "*"},
@@ -183,7 +183,7 @@ class TestRoutingPolicy:
 
         assert not policy.matches_context("any", "any", "any")
 
-    def test_get_stage_config(self):
+    def test_get_stage_config(self) -> None:
         policy = RoutingPolicy(
             id="test",
             stages=[
@@ -203,7 +203,7 @@ class TestRoutingPolicy:
         unknown = policy.get_stage_config("unknown")
         assert unknown is None
 
-    def test_get_model_for_stage(self):
+    def test_get_model_for_stage(self) -> None:
         policy = RoutingPolicy(
             id="test",
             default_model="gpt-3.5-turbo",
@@ -228,7 +228,7 @@ class TestRoutingPolicy:
         assert max_tokens is None
         assert downgraded is False
 
-    def test_specificity_score(self):
+    def test_specificity_score(self) -> None:
         policies = [
             RoutingPolicy(id="global", match={}),
             RoutingPolicy(id="tenant", match={"tenant_id": "t1"}),
@@ -242,7 +242,7 @@ class TestRoutingPolicy:
         scores = [p.specificity_score() for p in policies]
         assert scores == [0, 1, 2, 4, 7]
 
-    def test_from_dict(self):
+    def test_from_dict(self) -> None:
         data = {
             "id": "test-policy",
             "match": {"strand_id": "analytics"},
@@ -267,7 +267,7 @@ class TestRoutingPolicy:
 class TestModelCallContext:
     """Tests for ModelCallContext."""
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         context = ModelCallContext(
             run_id="run-1",
             stage="planning",

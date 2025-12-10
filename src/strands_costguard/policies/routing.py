@@ -1,6 +1,7 @@
 """Routing policy definitions for adaptive model selection."""
 
 from dataclasses import dataclass, field
+from typing import Any
 
 
 class ModelStage:
@@ -56,7 +57,7 @@ class DowngradeTrigger:
         return False, ""
 
     @classmethod
-    def from_dict(cls, data: dict) -> "DowngradeTrigger":
+    def from_dict(cls, data: dict[str, Any]) -> "DowngradeTrigger":
         """Create from dictionary."""
         return cls(
             soft_threshold_exceeded=data.get("soft_threshold_exceeded", False),
@@ -103,7 +104,7 @@ class StageConfig:
         return self.default_model, False, ""
 
     @classmethod
-    def from_dict(cls, data: dict) -> "StageConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "StageConfig":
         """Create from dictionary."""
         trigger_data = data.get("trigger_downgrade_on", {})
         return cls(
@@ -192,7 +193,7 @@ class RoutingPolicy:
         return score
 
     @classmethod
-    def from_dict(cls, data: dict) -> "RoutingPolicy":
+    def from_dict(cls, data: dict[str, Any]) -> "RoutingPolicy":
         """Create from dictionary."""
         stages = [StageConfig.from_dict(s) for s in data.get("stages", [])]
         return cls(

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 if TYPE_CHECKING:
     from strands_costguard.persistence.valkey_store import ValkeyBudgetStore
@@ -18,15 +18,15 @@ class FailureMode(str, Enum):
 class PolicySource(Protocol):
     """Protocol for policy sources."""
 
-    def load_budgets(self) -> list[dict]:
+    def load_budgets(self) -> list[dict[str, Any]]:
         """Load budget specifications."""
         ...
 
-    def load_routing_policies(self) -> list[dict]:
+    def load_routing_policies(self) -> list[dict[str, Any]]:
         """Load routing policies."""
         ...
 
-    def load_pricing(self) -> dict:
+    def load_pricing(self) -> dict[str, Any]:
         """Load pricing table."""
         ...
 

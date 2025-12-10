@@ -4,8 +4,12 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import yaml
+
+if TYPE_CHECKING:
+    from strands_costguard.core.config import PolicySource
 
 from strands_costguard.policies.budget import BudgetScope, BudgetSpec
 from strands_costguard.policies.routing import RoutingPolicy
@@ -22,29 +26,33 @@ class FilePolicySource:
     routing_file: str = "routing.yaml"
     pricing_file: str = "pricing.yaml"
 
-    def _load_yaml(self, filename: str) -> dict:
+    def _load_yaml(self, filename: str) -> dict[str, Any]:
         """Load a YAML file from the policy directory."""
         file_path = Path(self.path) / filename
         if not file_path.exists():
             logger.warning(f"Policy file not found: {file_path}")
             return {}
         with open(file_path) as f:
-            return yaml.safe_load(f) or {}
+            result = yaml.safe_load(f)
+            return result if isinstance(result, dict) else {}
 
-    def load_budgets(self) -> list[dict]:
+    def load_budgets(self) -> list[dict[str, Any]]:
         """Load budget specifications from YAML."""
         data = self._load_yaml(self.budgets_file)
-        return data.get("budgets", [])
+        budgets = data.get("budgets", [])
+        return list(budgets) if isinstance(budgets, list) else []
 
-    def load_routing_policies(self) -> list[dict]:
+    def load_routing_policies(self) -> list[dict[str, Any]]:
         """Load routing policies from YAML."""
         data = self._load_yaml(self.routing_file)
-        return data.get("routing_policies", [])
+        policies = data.get("routing_policies", [])
+        return list(policies) if isinstance(policies, list) else []
 
-    def load_pricing(self) -> dict:
+    def load_pricing(self) -> dict[str, Any]:
         """Load pricing table from YAML."""
         data = self._load_yaml(self.pricing_file)
-        return data.get("pricing", {})
+        pricing = data.get("pricing", {})
+        return dict(pricing) if isinstance(pricing, dict) else {}
 
 
 @dataclass
@@ -53,7 +61,7 @@ class EnvPolicySource:
 
     prefix: str = "COST_GUARD_"
 
-    def load_budgets(self) -> list[dict]:
+    def load_budgets(self) -> list[dict[str, Any]]:
         """Load budget from environment variables."""
         import os
 
@@ -71,7 +79,7 @@ class EnvPolicySource:
             }
         ]
 
-    def load_routing_policies(self) -> list[dict]:
+    def load_routing_policies(self) -> list[dict[str, Any]]:
         """Load routing from environment variables."""
         import os
 
@@ -88,7 +96,7 @@ class EnvPolicySource:
             }
         ]
 
-    def load_pricing(self) -> dict:
+    def load_pricing(self) -> dict[str, Any]:
         """Pricing not supported via env vars - return empty."""
         return {}
 
@@ -102,13 +110,13 @@ class PolicyStore:
     - workflow > strand > tenant > global defaults
     """
 
-    source: FilePolicySource | EnvPolicySource
+    source: "PolicySource"
     refresh_interval_seconds: int = 300
     _budgets: list[BudgetSpec] = field(default_factory=list)
     _routing_policies: list[RoutingPolicy] = field(default_factory=list)
-    _pricing: dict = field(default_factory=dict)
+    _pricing: dict[str, Any] = field(default_factory=dict)
     _last_refresh: datetime | None = None
-    _snapshot: dict | None = None  # Last known good config for fail-open
+    _snapshot: dict[str, Any] | None = None  # Last known good config for fail-open
 
     def __post_init__(self) -> None:
         """Initialize by loading policies."""
@@ -201,7 +209,7 @@ class PolicyStore:
                 return policy
         return None
 
-    def get_pricing(self) -> dict:
+    def get_pricing(self) -> dict[str, Any]:
         """Get the current pricing table."""
         self._maybe_refresh()
         return self._pricing

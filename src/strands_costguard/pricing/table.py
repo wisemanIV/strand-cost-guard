@@ -2,6 +2,7 @@
 
 import logging
 from dataclasses import dataclass, field
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +205,7 @@ class PricingTable:
         return input_cost + output_cost
 
     @classmethod
-    def from_dict(cls, data: dict) -> "PricingTable":
+    def from_dict(cls, data: dict[str, Any]) -> "PricingTable":
         """Create a PricingTable from a dictionary (e.g., from YAML)."""
         currency = data.get("currency", "USD")
         models = {}

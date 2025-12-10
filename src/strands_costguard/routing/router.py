@@ -72,7 +72,7 @@ class ModelRouter:
 
     cost_guard: Any  # CostGuard - use Any to avoid circular import
     config: RouterConfig = field(default_factory=RouterConfig)
-    _pending_calls: dict[str, dict] = field(default_factory=dict)
+    _pending_calls: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def before_call(
         self,

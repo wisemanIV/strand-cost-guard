@@ -83,6 +83,14 @@ python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_ignores = true
+exclude = ["examples/"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+# Tests often work with potentially None values that are asserted not None
+disable_error_code = ["union-attr", "operator", "type-arg", "assignment"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

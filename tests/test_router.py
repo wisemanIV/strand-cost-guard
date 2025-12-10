@@ -1,10 +1,12 @@
 """Tests for the adaptive model router."""
 
 import time
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 
+from strands_costguard.core.usage import ModelUsage
 from strands_costguard.routing.router import (
     ModelCallContext,
     ModelRouter,
@@ -15,7 +17,7 @@ from strands_costguard.routing.router import (
 class MockCostGuard:
     """Mock CostGuard for testing the router."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.before_model_call_response = MagicMock()
         self.before_model_call_response.allowed = True
         self.before_model_call_response.effective_model = "gpt-4o"
@@ -24,19 +26,21 @@ class MockCostGuard:
         self.before_model_call_response.reason = None
         self.before_model_call_response.warnings = []
 
-        self.recorded_usage = None
+        self.recorded_usage: ModelUsage | None = None
 
-    def before_model_call(self, run_id, model_name, stage, prompt_tokens_estimate):
+    def before_model_call(
+        self, run_id: str, model_name: str, stage: str, prompt_tokens_estimate: int
+    ) -> MagicMock:
         return self.before_model_call_response
 
-    def after_model_call(self, run_id, usage):
+    def after_model_call(self, run_id: str, usage: ModelUsage) -> None:
         self.recorded_usage = usage
 
 
 class MockModelClient:
     """Mock model client for testing."""
 
-    def __init__(self, response: dict = None):
+    def __init__(self, response: dict[str, Any] | None = None) -> None:
         self.response = response or {
             "model": "gpt-4o",
             "usage": {
@@ -45,9 +49,15 @@ class MockModelClient:
             },
             "choices": [{"message": {"content": "Hello!"}}],
         }
-        self.calls = []
+        self.calls: list[dict[str, Any]] = []
 
-    def call(self, messages, model, max_tokens=None, **kwargs):
+    def call(
+        self,
+        messages: list[dict[str, Any]],
+        model: str,
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
         self.calls.append(
             {
                 "messages": messages,
@@ -62,7 +72,7 @@ class MockModelClient:
 class TestRouterConfig:
     """Tests for RouterConfig."""
 
-    def test_default_values(self):
+    def test_default_values(self) -> None:
         """Should have sensible defaults."""
         config = RouterConfig()
         assert config.retry_on_rate_limit is True
@@ -75,14 +85,14 @@ class TestModelRouter:
     """Tests for ModelRouter."""
 
     @pytest.fixture
-    def mock_guard(self):
+    def mock_guard(self) -> MockCostGuard:
         return MockCostGuard()
 
     @pytest.fixture
-    def router(self, mock_guard):
+    def router(self, mock_guard: MockCostGuard) -> ModelRouter:
         return ModelRouter(cost_guard=mock_guard)
 
-    def test_before_call_allowed(self, router, mock_guard):
+    def test_before_call_allowed(self, router, mock_guard) -> None:
         """Should return allowed context when CostGuard allows."""
         messages = [{"role": "user", "content": "Hello"}]
 
@@ -97,7 +107,7 @@ class TestModelRouter:
         assert context.effective_model == "gpt-4o"
         assert context.was_downgraded is False
 
-    def test_before_call_rejected(self, router, mock_guard):
+    def test_before_call_rejected(self, router, mock_guard) -> None:
         """Should return rejected context when CostGuard rejects."""
         mock_guard.before_model_call_response.allowed = False
         mock_guard.before_model_call_response.reason = "budget exceeded"
@@ -113,7 +123,7 @@ class TestModelRouter:
         assert context.allowed is False
         assert context.reason == "budget exceeded"
 
-    def test_before_call_with_downgrade(self, router, mock_guard):
+    def test_before_call_with_downgrade(self, router, mock_guard) -> None:
         """Should capture downgrade information."""
         mock_guard.before_model_call_response.was_downgraded = True
         mock_guard.before_model_call_response.effective_model = "gpt-4o-mini"
@@ -131,7 +141,7 @@ class TestModelRouter:
         assert context.effective_model == "gpt-4o-mini"
         assert context.requested_model == "gpt-4o"
 
-    def test_before_call_with_max_tokens(self, router, mock_guard):
+    def test_before_call_with_max_tokens(self, router, mock_guard) -> None:
         """Should pass through max_tokens from CostGuard."""
         mock_guard.before_model_call_response.max_tokens = 1000
 
@@ -145,7 +155,7 @@ class TestModelRouter:
 
         assert context.max_tokens == 1000
 
-    def test_before_call_tracks_pending(self, router, mock_guard):
+    def test_before_call_tracks_pending(self, router, mock_guard) -> None:
         """Should track pending calls for latency calculation."""
         messages = [{"role": "user", "content": "Hello"}]
 
@@ -158,7 +168,7 @@ class TestModelRouter:
         assert "run-1" in router._pending_calls
         assert router._pending_calls["run-1"]["context"] == context
 
-    def test_before_call_no_pending_when_rejected(self, router, mock_guard):
+    def test_before_call_no_pending_when_rejected(self, router, mock_guard) -> None:
         """Should not track pending calls when rejected."""
         mock_guard.before_model_call_response.allowed = False
 
@@ -172,7 +182,7 @@ class TestModelRouter:
 
         assert "run-1" not in router._pending_calls
 
-    def test_after_call_records_usage(self, router, mock_guard):
+    def test_after_call_records_usage(self, router, mock_guard) -> None:
         """Should record usage with CostGuard."""
         # First, do before_call to set up pending
         messages = [{"role": "user", "content": "Hello"}]
@@ -192,7 +202,7 @@ class TestModelRouter:
         assert usage.completion_tokens == 50
         assert mock_guard.recorded_usage is not None
 
-    def test_after_call_extracts_cached_tokens(self, router, mock_guard):
+    def test_after_call_extracts_cached_tokens(self, router, mock_guard) -> None:
         """Should extract cached tokens from response."""
         messages = [{"role": "user", "content": "Hello"}]
         router.before_call(run_id="run-1", stage="planning", messages=messages)
@@ -209,7 +219,7 @@ class TestModelRouter:
 
         assert usage.cached_tokens == 30
 
-    def test_after_call_extracts_reasoning_tokens(self, router, mock_guard):
+    def test_after_call_extracts_reasoning_tokens(self, router, mock_guard) -> None:
         """Should extract reasoning tokens from response."""
         messages = [{"role": "user", "content": "Hello"}]
         router.before_call(run_id="run-1", stage="planning", messages=messages)
@@ -226,7 +236,7 @@ class TestModelRouter:
 
         assert usage.reasoning_tokens == 20
 
-    def test_after_call_calculates_latency(self, router, mock_guard):
+    def test_after_call_calculates_latency(self, router, mock_guard) -> None:
         """Should calculate latency when tracking enabled."""
         messages = [{"role": "user", "content": "Hello"}]
         router.before_call(run_id="run-1", stage="planning", messages=messages)
@@ -241,7 +251,7 @@ class TestModelRouter:
         assert usage.latency_ms is not None
         assert usage.latency_ms >= 10  # At least 10ms
 
-    def test_after_call_no_latency_when_disabled(self, mock_guard):
+    def test_after_call_no_latency_when_disabled(self, mock_guard) -> None:
         """Should not calculate latency when tracking disabled."""
         config = RouterConfig(track_latency=False)
         router = ModelRouter(cost_guard=mock_guard, config=config)
@@ -255,7 +265,7 @@ class TestModelRouter:
 
         assert usage.latency_ms is None
 
-    def test_after_call_uses_model_from_context(self, router, mock_guard):
+    def test_after_call_uses_model_from_context(self, router, mock_guard) -> None:
         """Should use model name from context when available."""
         mock_guard.before_model_call_response.effective_model = "gpt-4o-mini"
 
@@ -268,7 +278,7 @@ class TestModelRouter:
 
         assert usage.model_name == "gpt-4o-mini"
 
-    def test_after_call_uses_explicit_model_name(self, router, mock_guard):
+    def test_after_call_uses_explicit_model_name(self, router, mock_guard) -> None:
         """Should use explicit model_name when provided."""
         messages = [{"role": "user", "content": "Hello"}]
         router.before_call(run_id="run-1", stage="planning", messages=messages)
@@ -279,7 +289,7 @@ class TestModelRouter:
 
         assert usage.model_name == "custom-model"
 
-    def test_after_call_without_pending(self, router, mock_guard):
+    def test_after_call_without_pending(self, router, mock_guard) -> None:
         """Should handle after_call without prior before_call."""
         response = {
             "model": "gpt-4o",
@@ -292,7 +302,7 @@ class TestModelRouter:
         assert usage.model_name == "gpt-4o"
         assert usage.latency_ms is None
 
-    def test_call_makes_model_call(self, router, mock_guard):
+    def test_call_makes_model_call(self, router, mock_guard) -> None:
         """Should make complete model call through client."""
         client = MockModelClient()
         messages = [{"role": "user", "content": "Hello"}]
@@ -310,7 +320,7 @@ class TestModelRouter:
         assert client.calls[0]["model"] == "gpt-4o"
         assert usage.prompt_tokens == 100
 
-    def test_call_uses_effective_model(self, router, mock_guard):
+    def test_call_uses_effective_model(self, router, mock_guard) -> None:
         """Should use effective model from CostGuard decision."""
         mock_guard.before_model_call_response.effective_model = "gpt-4o-mini"
         mock_guard.before_model_call_response.was_downgraded = True
@@ -328,7 +338,7 @@ class TestModelRouter:
 
         assert client.calls[0]["model"] == "gpt-4o-mini"
 
-    def test_call_passes_max_tokens(self, router, mock_guard):
+    def test_call_passes_max_tokens(self, router, mock_guard) -> None:
         """Should pass max_tokens from CostGuard to client."""
         mock_guard.before_model_call_response.max_tokens = 500
 
@@ -344,7 +354,7 @@ class TestModelRouter:
 
         assert client.calls[0]["max_tokens"] == 500
 
-    def test_call_raises_when_rejected(self, router, mock_guard):
+    def test_call_raises_when_rejected(self, router, mock_guard) -> None:
         """Should raise RuntimeError when call is rejected."""
         mock_guard.before_model_call_response.allowed = False
         mock_guard.before_model_call_response.reason = "budget exceeded"
@@ -362,7 +372,7 @@ class TestModelRouter:
 
         assert "budget exceeded" in str(exc_info.value)
 
-    def test_call_passes_kwargs(self, router, mock_guard):
+    def test_call_passes_kwargs(self, router, mock_guard) -> None:
         """Should pass additional kwargs to client."""
         client = MockModelClient()
         messages = [{"role": "user", "content": "Hello"}]
@@ -384,10 +394,10 @@ class TestTokenEstimation:
     """Tests for token estimation."""
 
     @pytest.fixture
-    def router(self):
+    def router(self) -> ModelRouter:
         return ModelRouter(cost_guard=MockCostGuard())
 
-    def test_estimate_tokens_simple(self, router):
+    def test_estimate_tokens_simple(self, router) -> None:
         """Should estimate tokens for simple messages."""
         messages = [
             {"role": "user", "content": "Hello, world!"},  # 13 chars + 10 overhead = 23 chars
@@ -399,7 +409,7 @@ class TestTokenEstimation:
         assert estimate > 0
         assert estimate < 100  # Reasonable for short message
 
-    def test_estimate_tokens_multiple_messages(self, router):
+    def test_estimate_tokens_multiple_messages(self, router) -> None:
         """Should sum tokens across multiple messages."""
         messages = [
             {"role": "system", "content": "You are a helpful assistant."},
@@ -411,7 +421,7 @@ class TestTokenEstimation:
 
         assert estimate > 10  # Should be reasonable for multiple messages
 
-    def test_estimate_tokens_multipart_content(self, router):
+    def test_estimate_tokens_multipart_content(self, router) -> None:
         """Should handle multipart content (e.g., vision)."""
         messages = [
             {
@@ -427,7 +437,7 @@ class TestTokenEstimation:
 
         assert estimate > 0
 
-    def test_estimate_tokens_empty_content(self, router):
+    def test_estimate_tokens_empty_content(self, router) -> None:
         """Should handle empty content."""
         messages = [{"role": "user", "content": ""}]
 
@@ -440,7 +450,7 @@ class TestTokenEstimation:
 class TestModelCallContext:
     """Tests for ModelCallContext."""
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """Should convert to dictionary."""
         context = ModelCallContext(
             run_id="run-1",

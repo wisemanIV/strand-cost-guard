@@ -114,7 +114,7 @@ class CostGuard:
         # Calculate remaining budget and utilization
         remaining = None
         utilization = None
-        warnings = []
+        warnings: list[str] = []
 
         for budget in budgets:
             state = self._budget_tracker.get_or_create_budget_state(
@@ -178,7 +178,7 @@ class CostGuard:
             return IterationDecision.proceed()
 
         budgets = self._run_budgets.get(run_id, [])
-        warnings = []
+        warnings: list[str] = []
 
         # Check iteration limits from constraints
         for budget in budgets:
@@ -274,7 +274,7 @@ class CostGuard:
         max_tokens = None
         was_downgraded = False
         downgrade_reason = ""
-        warnings = []
+        warnings: list[str] = []
 
         # Check routing policy for model selection
         if self.config.enable_routing:
@@ -411,7 +411,7 @@ class CostGuard:
             return ToolDecision.allow()
 
         budgets = self._run_budgets.get(run_id, [])
-        warnings = []
+        warnings: list[str] = []
 
         # Check tool call limits
         for budget in budgets:
@@ -485,7 +485,7 @@ class CostGuard:
         tenant_id: str,
         strand_id: str,
         workflow_id: str,
-    ) -> dict[str, dict]:
+    ) -> dict[str, dict[str, Any]]:
         """Get a summary of budget usage for a context."""
         budgets = self._policy_store.get_budgets_for_context(tenant_id, strand_id, workflow_id)
         return self._budget_tracker.get_budget_summary(tenant_id, strand_id, workflow_id, budgets)
