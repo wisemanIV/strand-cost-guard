@@ -1,6 +1,6 @@
 # Strands CostGuard
 
-A Strands-native cost management library for multi-agent systems with budget enforcement, adaptive model routing, and OpenTelemetry-compatible metrics.
+A cost management library for the [Strands Agents SDK](https://github.com/strands-agents/sdk-python) with budget enforcement, adaptive model routing, and OpenTelemetry-compatible metrics.
 
 ## Features
 
@@ -10,6 +10,11 @@ A Strands-native cost management library for multi-agent systems with budget enf
 - **OpenTelemetry Metrics**: Emit cost metrics compatible with OTel collectors for long-term storage and analysis
 - **Flexible Policies**: Configure via YAML files or environment variables
 - **Persistent Budget State**: Optional Valkey/Redis persistence for budget state across restarts
+
+## Requirements
+
+- Python 3.10+
+- [Strands Agents SDK](https://github.com/strands-agents/sdk-python) 0.1.0+
 
 ## Installation
 
